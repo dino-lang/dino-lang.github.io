@@ -24,7 +24,8 @@ Here is short code to taste Dino:
 <div style="float: left; width: 50%;">
 <p>Eratosthenes sieve:</p>
 <pre>
-    var i, prime, count = 0, SieveSize = 8191, flags = [SieveSize : 1];
+    var i, prime, count = 0, SieveSize = 8191;
+    var flags = [SieveSize : 1];
     for (i = 0; i < SieveSize; i++)
       if (flags[i]) {
         prime = i + i + 3;
@@ -32,7 +33,6 @@ Here is short code to taste Dino:
         count++;
       }
     putln (count);
-
 
 
 
