@@ -788,6 +788,8 @@ Ocaml   |33.2   |1.8    | 5.4   |133    |0.3   |0.4   |1.5   |3.7  |2.6    |4.8 
   * Windows through CYGWIN
   * MacOSX
     * X code and GMP package is necessary to build Dino
+* Dino site:
+      <http://dino-lang.github.io>
 * DINO and COCOM repository:
       <https://github.com/dino-lang/dino.git>
 * License -- GPL 2 and LGPL 2:
