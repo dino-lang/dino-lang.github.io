@@ -1,0 +1,23 @@
+body { margin: 60px auto; width: 70%; }
+
+a {
+  color: #0044b3;
+  text-decoration: none;
+}
+
+a:hover { text-decoration: underline; }
+
+p, ul { font-size: 1.1em; line-height: 1.4em; color: #333; }
+
+h1, h2, h3, h4 { font-family: 'Helvetica', 'Arial', 'Sans-Serif'; }
+h1 { font-size: 2em;  }
+h2 { font-size: 1.8em; }
+h3 { font-size: 1.6em; }
+h4 { font-size: 1.3em; }
+
+nav ul { font-size: 2em; font-family: 'Helvetica', 'Arial', 'Sans-Serif'; padding: 0px; list-style: none; font-weight: bold; }
+footer ul { font-size: 1.3em; font-family: 'Helvetica', 'Arial', 'Sans-Serif'; padding: 0px; list-style: none; }
+
+nav ul li, footer ul li { display: inline; margin-right: 20px; }
+
+footer { border-top: 1px solid #d5d5d5; font-size: .8em; }

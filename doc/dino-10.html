@@ -1,0 +1,237 @@
+---
+title:  Dino Documentation
+layout: default
+---
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
+ <TITLE>The Programming Language DINO: Appendix A. Syntax of Dino</TITLE>
+ <LINK HREF="dino-11.html" REL=next>
+ <LINK HREF="dino-9.html" REL=previous>
+ <LINK HREF="dino.html#toc10" REL=contents>
+</HEAD>
+<BODY>
+<A HREF="dino-11.html">Next</A>
+<A HREF="dino-9.html">Previous</A>
+<A HREF="dino.html#toc10">Contents</A>
+<HR>
+<H2><A NAME="s10">10.</A> <A HREF="dino.html#toc10">Appendix A. Syntax of Dino</A></H2>
+
+<P>
+<BLOCKQUOTE><CODE>
+<PRE>
+Expr = Expr "?"  Expr ":" Expr
+     | Expr "||"  Expr
+     | Expr "&amp;&amp;"  Expr
+     | Expr in  Expr
+     | Expr "|"  Expr
+     | Expr "^"  Expr
+     | Expr "&amp;"  Expr 
+     | Expr "=="  Expr  
+     | Expr "!="  Expr  
+     | Expr "==="  Expr  
+     | Expr "!=="  Expr  
+     | Expr "&lt;"  Expr
+     | Expr ">"  Expr  
+     | Expr "&lt;="  Expr
+     | Expr ">="  Expr 
+     | Expr "&lt;&lt;"  Expr
+     | Expr ">>"  Expr
+     | Expr ">>>"  Expr
+     | Expr "@"  Expr
+     | Expr "+"  Expr
+     | Expr "-"  Expr
+     | Expr "*"  Expr
+     | Expr "/"  Expr
+     | Expr "%"  Expr
+     | "!"  Expr
+     | "+"  Expr
+     | "-"  Expr
+     | "~"  Expr
+     | "#"  Expr
+     | final  Expr
+     | new  Expr
+     | ".+"  Expr
+     | ".*"  Expr
+     | ".&amp;"  Expr
+     | ".^"  Expr
+     | ".|"  Expr
+     | Designator
+     | INTEGER
+     | FLOATINGPOINTNUMBER
+     | CHARACTER
+     | nil
+     | "(" Expr ")"
+     | Call
+     | "["  ElistPartsList "]"
+     | tab "["  ElistPartsList "]"
+     | STRING
+     | char
+     | int
+     | long
+     | float
+     | hide
+     | hideblock
+     | vec
+     | tab
+     | fun
+     | thread
+     | class
+     | obj
+     | process
+     | type
+     | this
+     | char "(" Expr ")"
+     | int "(" Expr ")"
+     | float "(" Expr ")"
+     | vec "(" Expr ["," Expr] ")"
+     | tab "(" Expr ")"
+     | type "(" Expr ")"
+     | AnonHeader FormalParameters Block
+     | "_"
+     | "..."
+
+Designator = DesignatorOrCall "["  Expr "]"
+           | DesignatorOrCall ActualParameters
+           | DesignatorOrCall "."  IDENT
+           | IDENT
+
+ElistPartsList = [ Expr [ ":" Expr ] {"," Expr [ ":" Expr ] } ]
+        
+DesignatorOrCall = Designator
+                 | Call
+
+Call = Designator ActualParameters
+
+ActualParameters = "(" [ Expr { "," Expr } ] ")"
+        
+AnonHeader = [Qualifiers] FuncThreadClass
+                          
+Stmt = ExecutiveStmt
+     | Declaration
+
+Assign = "="
+       | "*="
+       | "/="
+       | "%="
+       | "+="
+       | "-="
+       | "@="
+       | "&lt;&lt;="
+       | ">>="
+       | ">>>="
+       | "&amp;="
+       | "^="
+       | "|="
+
+Pattern = Expr
+
+ExecutiveStmt = ";"
+              | Expr ";"
+              | Designator Assign  Expr ";"
+              | Designator ("++" | "--")  ";"
+              | ("++" | "--")  Designator ";"
+              | if  "(" Expr ")" Stmt [ else Stmt ]
+              | for  "(" Stmt ForGuardExpr ";"  Stmt ")" Stmt
+              | for  "(" Designator in Expr ")" Stmt
+              | (pmatch | rmatch) "(" Expr ")" "{" CaseList "}"
+              | break ";"
+              | continue ";"
+              | return  [ Expr ] ";"
+              | throw  Expr ";"
+              | wait  "(" Expr ")" Stmt
+              | BlockStmt
+              | TryBlockStmt
+
+ForGuardExpr = [Expr]
+
+CaseList = { case Pattern [CaseCond] ":" StmtList }
+CaseCond = if Expr
+                  
+BlockStmt = Block
+
+TryBlockStmt = try Block { Catch }
+        
+Catch = catch  "(" ExceptClassList ")" Block
+
+ExceptClassList = Expr { "," Expr }
+
+Declaration = VarDeclarations
+            | FriendClause
+            | ExternDeclarations
+            | FuncClassDeclaration
+            | SingletonObject
+            | ForwardDeclaration
+            | ExposeClause
+            | UseClause
+            | IncludeDeclaration
+
+VarDeclarations =  [pub | priv] (val | var)  VarList ";"
+
+VarList = Var { "," Var }
+        
+Var = IDENT | pattern "="  Expr
+
+ExternDeclarations = [pub | priv] extern ExternItems ";"
+
+FuncClassDeclaration = Header FormalParameters Hint Block
+
+Hint = [ "!" IDENT ]
+
+FriendClause = friend IDENT { "," IDENT } ";"
+        
+IncludeDeclaration = include ["+"] STRING ";"
+
+ExternItems = ExternItem { "," ExternItem }
+
+ExternItem = IDENT 
+           | IDENT  "(" ")"
+
+Header = [Qualifiers] FuncThreadClass IDENT
+
+Qualifiers = pub | priv | final
+           | pub final | priv final
+           | final pub | final priv
+
+FuncThreadClass = fun 
+                | thread 
+                | class 
+        
+FormalParameters =
+                 | "(" [ ParList ] ")"
+                 | "(" ParList "," "..." ")"
+                 | "(" "..." ")"
+        
+ParList = Par { "," Par}
+
+Par = [pub | priv] [val | var] IDENT [ "=" Expr]
+
+ExposeClause = expose ExposeItem { "," ExposeItem }
+
+ExposeItem = QualIdent ["(" IDENT ")"] | QaulIdent ".*"
+
+QualIdent = IDENT {"." IDENT}
+
+UseClause = use IDENT { UseItemClause }
+
+UseItemClause = [former | later] UseItem { "," UseItem }
+
+Item = IDENT [ "(" IDENT ")"]
+
+Block = "{"  StmtList "}"
+
+StmtList = { Stmt }
+        
+Program = StmtList
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+
+<HR>
+<A HREF="dino-11.html">Next</A>
+<A HREF="dino-9.html">Previous</A>
+<A HREF="dino.html#toc10">Contents</A>
+</BODY>
+</HTML>

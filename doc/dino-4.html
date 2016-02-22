@@ -1,0 +1,609 @@
+---
+title:  Dino Documentation
+layout: default
+---
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
+ <TITLE>The Programming Language DINO: Declarations and Scope Rules</TITLE>
+ <LINK HREF="dino-5.html" REL=next>
+ <LINK HREF="dino-3.html" REL=previous>
+ <LINK HREF="dino.html#toc4" REL=contents>
+</HEAD>
+<BODY>
+<A HREF="dino-5.html">Next</A>
+<A HREF="dino-3.html">Previous</A>
+<A HREF="dino.html#toc4">Contents</A>
+<HR>
+<H2><A NAME="s4">4.</A> <A HREF="dino.html#toc4">Declarations and Scope Rules</A></H2>
+
+<P>A Dino program is block structured.  Each block introduces a new
+identifier scope.  A block consists of executive statements and
+declarations and may contain nested blocks.  There are also implicit
+blocks containing each case-part of match statements (see
+below). Each identifier used in a program should be declared in a
+declaration in the program, unless it is a predeclared identifier.
+<BLOCKQUOTE><CODE>
+<PRE>
+          Block = "{"  StmtList "}"
+
+          StmtList = { Stmt }
+        
+          Stmt = ExecutiveStmt
+               | Declaration
+</PRE>
+</CODE></BLOCKQUOTE>
+
+When declaring an identifier, you also specify certain permanent
+properties of a declaration, such as whether it is a variable, a
+function, a class, or a singleton object.  The identifier is then used
+to refer to the associated declaration (more correctly with the
+declaration instance).
+<BLOCKQUOTE><CODE>
+<PRE>
+          Declaration = VarDeclarations
+                      | AccessClause
+                      | ExternDeclarations
+                      | FuncClassDeclaration
+                      | SingletonObject
+                      | ForwardDeclaration
+                      | IncludeDeclaration
+</PRE>
+</CODE></BLOCKQUOTE>
+
+The scope of a declaration is textually from the point of declaration
+to the end of the block to which the declaration belongs and hence to
+which the declaration is local.  The declaration scope can stop
+earlier at the point of another declaration with the same identifier
+in the same block.  The declaration scope excludes the scopes of
+declarations with the same identifier which are in nested blocks.</P>
+<P>It is important to understand the notion of instantiation of the
+declaration.  This notion reflects program execution, not the static
+structure of program.  An instance exists in a <EM>context</EM>.
+Actually, a context is an execution environment consisting of the
+covering block instances and/or class objects.  A new instance of the
+block is created when execution of the block starts.  There may be
+more than one instance of the same block, e.g. when the block is a
+function or class body (in this case the block instance is a class
+object), or when the block is executed on different threads (parallel
+execution branches) or when there is a reference to a block instance
+after its execution.  When a new instance of the block starts, all the
+block declarations are instantiated too.  For a variable declaration,
+it means a new instance of variable is created in the given context.
+For a function or class declaration, it means that the function or
+class is bound to the given context.</P>
+<P>Example: 
+The following program illustrates a case when a reference to
+a block instance exists after its execution.  The program
+outputs the result 8.
+<BLOCKQUOTE><CODE>
+<PRE>
+          var i, f;
+        
+          for (i = 0; i &lt; 10; i++)
+            if (i % 4 == 0)
+              {
+                var j = i;
+                fun r () {return j;}
+                f = r;
+              }
+          putln (f ());
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+<P>There are certain rules for declaration accessibility.  Declaration is
+always either <EM>private</EM> or <EM>public</EM>.  Private
+declaration is accessible only inside the declaration scope or inside
+functions or classes which are declared as <EM>friend</EM> in the
+declaration block.  A public declaration instance is always accessible
+when association (see below) of the identifier is successful.  By
+default, (instances of) declarations in a class block are public.  In
+all other places, the (instances of) declarations are private by
+default.  The following constructions are used for declaring an
+identifier to be a friend:
+<BLOCKQUOTE><CODE>
+<PRE>
+          FriendClause = friend IDENT { "," IDENT } ";"
+</PRE>
+</CODE></BLOCKQUOTE>
+
+Examples:
+<BLOCKQUOTE><CODE>
+<PRE>
+          friend class2;
+</PRE>
+</CODE></BLOCKQUOTE>
+
+Association of an identifier and the corresponding declaration
+instance is performed by the following rules:
+<UL>
+<LI>The corresponding declaration instance is searched for a
+separate identifier occurrence in the instance of the block in
+which the identifier occurs.  The identifier should be in the scope
+of the corresponding declaration.  If there is no such declaration, the
+declaration is searched in the covering block instance of the
+current block instance back from the current block, and so on.
+In any case, the identifier should be in the scope of the
+corresponding declaration.</LI>
+<LI>Declaration instance for an identifier in the following
+construction
+<BLOCKQUOTE><CODE>
+<PRE>
+       designator.identifier
+</PRE>
+</CODE></BLOCKQUOTE>
+
+is searched in the block instance (e.g. in a class object)
+whose value is in the designator.  The scope of the found
+declaration should always include the block end.  The
+exception <CODE>accessop</CODE> occurs if the declaration is not
+found with such identifier, or the declaration is private and
+the construction is not inside a friend of the declaration
+scope.</LI>
+</UL>
+</P>
+<P>The following identifiers are predeclared on the top level (in the
+implicit block covering the whole program).  They are described in
+more detail later in the report.
+<BLOCKQUOTE><CODE>
+<PRE>
+  lang           io             sys            math
+  re             yaep
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+
+<H2><A NAME="ss4.1">4.1</A> <A HREF="dino.html#toc4.1">Variable Declarations</A>
+</H2>
+
+<P>Dino is an imperative language. In other words it has
+<EM>variables</EM> which are named containers of values.  A variable
+can contain any value.  This means that DINO is a dynamically-typed
+language.  The declaration of a variable also may define the initial
+value of the variable.  In this case a <EM>pattern</EM> can stand on
+the left side of the assignment instead of just an identifier.  The
+pattern should contain at least one variable.  The pattern variables
+are declared at the assignment point.  Pattern should match the
+assigned value, otherwise exception <CODE>patternmatch</CODE> is
+generated.  Details about patterns, pattern variables, and pattern
+matching is decribed later in this document.</P>
+<P>Assigning of the initial value to the variable instance is made after
+execution of the previous statements of the block and after execution
+of previous assignments in the variable list.  By default the initial
+value of variables is undefined.  Nothing can be done with this value.
+This value even can not be stored.</P>
+<P>The value of the variable is final can not be changed after its
+initialization if its declaration is in a list starting with
+keyword <CODE>val</CODE>.</P>
+<P>Keywords <CODE>pub</CODE> and <CODE>priv</CODE> can be used to redefine the
+default accessibility.  They make the declared variables
+correspondingly public and private.
+<BLOCKQUOTE><CODE>
+<PRE>
+          VarDeclarations = [pub | priv] (val | var) VarList ";"
+
+          VarList = Var { "," Var }
+        
+          Var = IDENT | Pattern "="  Expr
+</PRE>
+</CODE></BLOCKQUOTE>
+
+Examples:
+<BLOCKQUOTE><CODE>
+<PRE>
+          var i = 0, [el1, el2] = [2, 5], j, k;
+          val constant = 10, nil_constant = nil;
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+
+<H2><A NAME="ss4.2">4.2</A> <A HREF="dino.html#toc4.2">External Declarations</A>
+</H2>
+
+<P>Dino permits to use functions written in other languages, e.g. C.  The
+functions should have special prototypes and must have to access to
+the DINO standard procedural interface (SPI).  Dino can also have
+access to variables of a special type declared in the source code in
+another language.  The details of the implementation of such features
+and the DINO SPI are not described here (some details are given in
+appendix B).  As rule, the external functions and variables will be
+implemented as dynamically loaded libraries.  This is the powerful
+instrument of DINO extension.  The external functions and variables
+are declared after keyword <CODE>extern</CODE>.  An external function
+identifier is followed by <CODE>()</CODE>.  All external declarations
+(e.g. in different blocks) with the same identifier refer the the same
+external function or variable.  As in variable declaration,
+keywords <CODE>pub</CODE> and <CODE>priv</CODE> can be used to redefine the
+default accessibility.
+<BLOCKQUOTE><CODE>
+<PRE>
+          ExternDeclarations = [pub | priv] extern ExternItems ";"
+
+          ExternItems = ExternItem { "," ExternItem }
+
+          ExternItem = IDENT 
+                     | IDENT  "(" ")"
+</PRE>
+</CODE></BLOCKQUOTE>
+
+Examples:
+<BLOCKQUOTE><CODE>
+<PRE>
+          extern function (), variable;
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+
+<H2><A NAME="ss4.3">4.3</A> <A HREF="dino.html#toc4.3">Functions and Classes</A>
+</H2>
+
+<P>A function/class declaration consists of a
+function/class <EM>header</EM>, <EM>formal parameters</EM>, and a
+function/class block (body).  The header specifies the function/class
+identifier.</P>
+<P>A function can return the result with the aid of the
+statement <EM>return</EM>.  If the result value after the
+keyword <EM>return</EM> is absent or the return statement is not
+executed, the function result is undefined.  Expression-statement as
+the last statement in the function block is actually abbreviation of
+return with the expression.</P>
+<P>A class call returns the class block instance (an <EM>object</EM> of
+the class).  The return-statement for classes must be without a result.</P>
+<P><EM>Thread-functions</EM> are analogous to general functions.  The
+difference is in that a new execution thread (<EM>process</EM>) is
+created during the thread-function call, the return-statement inside
+thread-function must be without an expression, and the thread-function
+returns the corresponding process.  The process finishes when the
+corresponding thread block finishes.  Processes are executed
+concurrently.  Originally only one process (called the <EM>main
+thread</EM>) exists in a DINO program.</P>
+<P>The formal parameters are considered to be declared in a
+function/class block and to be initialized by values of <EM>actual
+parameters</EM> during a call of the function/class.  By default they
+can change their value.  Keyword <CODE>val</CODE> prevents changing value
+of the corresponding formal parameter after the initialization.</P>
+<P>Default accessibility of the formal parameter can be changed by using
+keywords <CODE>pub</CODE> or <CODE>priv</CODE> (see accessibility in section
+"Declarations and Scope Rules").</P>
+<P>The number of <EM>actual parameters</EM> should be the same as the
+number of formal parameters.  There are two exclusion to this
+requirement.  One exclusion is formal parameters initialized by a
+default value in a way analogous to variable initialization.  The
+actual parameters corresponding to the formal parameters with default
+values can be omitted.  In this case, the formal parameters will have
+the default value.  Another exclusion is an usage of <CODE>...</CODE> at
+the end of the list of formal parameter declarations, the number of
+actual parameters can be more the number of formal parameters.
+Using <CODE>...</CODE> results in that the formal parameter with the
+identifier <CODE>args</CODE> will be declared implicitly.  The value of
+the parameter will be a vector whose elements will be the remaining
+actual parameter values.  If the number of actual parameters is equal
+to the number of formal parameters (not taking the implicit
+parameter <CODE>args</CODE> into account), the value of <CODE>args</CODE> will
+be the empty vector.</P>
+<P>All formal parameters with default values should be at the end of the
+parameter list.  Usage of formal parameters with default values is
+prohibited in case when <CODE>...</CODE> is used.</P>
+<P>If a class contains a function with the name <CODE>destroy</CODE>, the
+function will be called when the class object becomes garbage during
+the garbage collection process or at the end of the program.  The
+function can also be called explicitly from outside if it is declared
+as public.  You should remember that the function is called by the
+garbage collector without actual parameters and the garbage collector
+(or finishing the program) ignores the result value.  So the function
+should satisfy the above rules to be called without actual parameters.</P>
+<P>You may prevent removing the corresponding object by the garbage
+collector in the function destroy by assigning the object to a
+variable.  It means that the function can be called several times
+(during several garbage collections) for the same object.  But you
+should also avoid creation of objects during the call of
+function <CODE>destroy</CODE> because it may result in increase of the
+heap.</P>
+<P>A function/class declaration can have optional qualifiers.
+Qualifier <CODE>final</CODE> can not be mentioned in use-clause.
+Qualifiers <CODE>pub</CODE> and <CODE>priv</CODE> changes default
+accessibility of the declaration.
+<BLOCKQUOTE><CODE>
+<PRE>
+          FuncClassDeclaration = Header FormalParameters Hint Block
+
+          Header = [Qualifiers] FuncThreadClass IDENT
+
+          Qualifiers = pub | priv | final
+                      | pub final | priv final
+                      | final pub | final priv
+
+          FuncThreadClass = fun 
+                          | thread 
+                          | class 
+        
+          FormalParameters =
+                           | "(" [ ParList ] ")"
+                           | "(" ParList "," "..." ")"
+                           | "(" "..." ")"
+
+          ParList = Par { "," Par}
+
+          Par = [pub | priv] [val | var] IDENT [ "=" Expr]
+
+          Hint = [ "!" IDENT ]
+</PRE>
+</CODE></BLOCKQUOTE>
+
+Examples:</P>
+<P>The following is parameterless class:
+<BLOCKQUOTE><CODE>
+<PRE>
+          class stack () {}
+          class stack {}
+</PRE>
+</CODE></BLOCKQUOTE>
+
+The following is a class header with initialization parameters:
+<BLOCKQUOTE><CODE>
+<PRE>
+          class stack (max_height = variable,
+                       val a = 1, priv val b = 2)
+</PRE>
+</CODE></BLOCKQUOTE>
+
+The following is a function with a variable number of parameters:
+<BLOCKQUOTE><CODE>
+<PRE>
+          fun print_args (...)
+            {
+              for (i = 0; i &lt; #args; i++)
+                println (args[i]);
+            }
+</PRE>
+</CODE></BLOCKQUOTE>
+
+The following example is a class with the function <CODE>destroy</CODE>:
+<BLOCKQUOTE><CODE>
+<PRE>
+          var objs_number = 0;
+          class object () {
+            priv var n = objs_number;
+            objs_number++;
+            priv fun destroy () {objs_number--;}
+          }
+</PRE>
+</CODE></BLOCKQUOTE>
+
+The following example illustrates threads:
+<BLOCKQUOTE><CODE>
+<PRE>
+          class buffer (length = 3) {
+            var b = [length:nil], first = 0, free = 0, empty = 1;
+            priv b, first, free, length;
+            fun consume () {
+              var res;
+          
+              wait (!empty);
+              res = b [first];
+              first = (first + 1) % length;
+              wait (1) empty = first == free;
+              return res;
+            }
+            fun produce (value) {
+              wait (empty || free != first);
+              b [free] = value;
+              free = (free + 1) % length;
+              wait (1) empty = 0;
+            }
+          }
+          
+          thread consumer (buffer) {
+              fun produce (value) {
+                buffer.produce (value);
+                put ("produce: ");
+                println (value);
+              }
+              produce (10);
+              produce (10.5);
+              produce ("string");
+              produce ('c');
+              produce (nil);
+          }
+          
+          thread producer (buffer) {
+            var value;
+          
+            for (;;) {
+              value = buffer.consume ();
+              if (value == nil)
+                break;
+              put ("consume: ");
+              println (value);
+            }
+          }
+          
+          var queue = buffer ();
+          consumer (queue);
+          producer (queue);
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+<P>According to Dino scope rules, a declaration should be present before
+any usage of the declared identifier.  Sometimes we need to use
+function/class identifier before its declaration, e.g. in the case of
+mutually recursive functions.  To do this, Dino has forward
+declarations.</P>
+<P>A forward declaration is just a function/class header followed by
+semicolon:
+<BLOCKQUOTE><CODE>
+<PRE>
+            ForwardDeclaration = Header ";"
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+<P>Forward declaration denotes first declaration with the same identifier
+in the same block after the forward declaration.  The forward and the
+corresponding declaration should be the same declaration type
+(function, class, or thread), and have the same accessibility and the
+same qualifier <CODE>final</CODE>.</P>
+<P>The corresponding declaration may be absent.  In this case a call of
+the function/class results in occuring exception <CODE>abstrcall</CODE>.
+When accessing to such function through the corresponding object,
+exception <CODE>accessvalue</CODE> is generated.  Forward declaration
+without the corresponding declaration can be usefull to
+describe <EM>abstract classes</EM>.  The following are examples of
+forward declarations:
+<BLOCKQUOTE><CODE>
+<PRE>
+          fun even;
+          fun odd (i) { if (i == 0) return 0; return even (i - 1);}
+          fun even (i) { if (i == 0) return 1; return odd (i - 1);}
+          class operation { // abstract class
+            fun print_op (); fun apply ();
+          }
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+<P>Function/class declaration may have an optimization hint.  Currently,
+there are only 3 hints.  Hint <CODE>!pure</CODE> means that the function
+is pure, i.e. it has no side effects and returns result depending only
+on the call arguments.  Hint <CODE>!inline</CODE> means inlining the
+function calls.  Hint <CODE>!jit</CODE> use JIT compiler for the
+function/class.</P>
+
+<H2><A NAME="ss4.4">4.4</A> <A HREF="dino.html#toc4.4">Use Clause</A>
+</H2>
+
+<P>Dino has a powerful block composition operator <EM>use</EM>.  Using it
+inside a class block can emulate <EM>(multiple) inheritance, traits,
+duck typing, and dynamic dispatching</EM>.  The use-clause has the
+following syntax:
+<BLOCKQUOTE><CODE>
+<PRE>
+          UseClause = use IDENT { UseItemClause }
+
+          UseItemClause = [former | later] UseItem { "," UseItem }
+
+          Item = IDENT [ "(" IDENT ")"]
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+<P>Use-clause provides a safe way to support object oriented programming.
+It has the following semantics:
+<UL>
+<LI>Declarations of class/function with identifier given in
+<EM>use</EM> are inlayed.</LI>
+<LI>Declarations before the use-clause rewrite corresponding
+inlayed declarations mentioned in <EM>former</EM>-items.</LI>
+<LI>Declarations after the use-clause rewrite corresponding
+inserted declarations mentioned in <EM>later</EM>-items.</LI>
+<LI>The original (rewritten) and new (rewritting) declarations
+should be <EM>present</EM> if they are given in former- or
+later-items.</LI>
+<LI>The original and new declarations should be <EM>matched</EM>.
+It means that they should be the same declaration type (variable,
+function, class, thread, and external), they should have the same
+accessibility, they should the same final attribute for functions,
+classes, and threads.</LI>
+<LI>The original rewritten declaration can be still used in the
+block if it is <EM>renamed</EM>.  The declaration is renamed when a
+identfier in parentheses is given.  The original declaration can be
+used with this identfier.</LI>
+</UL>
+</P>
+<P>These rules are necessary for correct <EM>duck-typing</EM> or class
+<EM>sub-typing</EM>.</P>
+<P>The following example illustrates use-clause:
+<BLOCKQUOTE><CODE>
+<PRE>
+           class point (x, y) {
+           }
+           class circle (x, y, radius) {
+             use point former x, y;
+             fun square () {3.14 * radius * radius;}
+           }
+           class ellipse (x, y, radius, width) {
+             use circle former x, y, radius later square;
+             fun square () {
+               ...
+             }
+           }
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+
+<H2><A NAME="ss4.5">4.5</A> <A HREF="dino.html#toc4.5">Singleton Object</A>
+</H2>
+
+<P>Sometimes it is usefull to guarantee that there is only single object
+(called <EM>singleton object</EM>) of a class.  Although it can be
+achieved by creating of object of an anonymous class (see section
+"Anonymous Functions and Classes") and assigning it to a variable
+declared as <CODE>val</CODE>, Dino has a special declaration for singleton
+object:
+<BLOCKQUOTE><CODE>
+<PRE>
+        SingletonObject = [pub | priv] obj IDENT block
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+<P>Keywords <CODE>pub</CODE> and <CODE>priv</CODE> can be used to redefine the
+default accessibility.  They make the declared object correspondingly
+public and private.  Example of singleton object declaration:
+<BLOCKQUOTE><CODE>
+<PRE>
+           priv obj coord {
+             val x = 0, y = 10;
+           }
+</PRE>
+</CODE></BLOCKQUOTE>
+ </P>
+<P>You can not refers to object by its name inside the object as the
+declaration actually occurs after the object block.</P>
+
+<H2><A NAME="ss4.6">4.6</A> <A HREF="dino.html#toc4.6">Expose-clause</A>
+</H2>
+
+<P>Signleton object declarations can be accessed through designator
+with <CODE>.</CODE> -- see <EM>Designators</EM>.  Sometimes it can be too
+verbose.  Expose-clause can make access to public object declarations
+more concise by introducing declarations on the clause place which are
+actually aliases to the corresponding object declarations.
+<BLOCKQUOTE><CODE>
+<PRE>
+          ExposeClause = expose ExposeItem { "," ExposeItem }
+
+          ExposeItem = QualIdent ["(" IDENT ")"] | QaulIdent ".*"
+
+          QualIdent = IDENT {"." IDENT}
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+<P>You can expose one declaration by using QualIdent with optional alias
+identfier in parentheses.  If the alias is not given, the declaration
+name will be used for the alias.  Qualident designates declaration
+which can be described in signleton object or nested singleton
+objects.</P>
+<P>You also can expose all public declarations of a signleton object by
+their identifiers.  In this case, you need to add <CODE>.*</CODE> after
+the qualident designating the corresponding object.</P>
+<P>It is a good practise to put all package declarations in a singleton
+object which in this case behaves as name <EM>spaces</EM> or modules
+in other programming langiages.</P>
+<P>Example of use-clauses:
+<BLOCKQUOTE><CODE>
+<PRE>
+          expose sys.system (shell), math.*;
+          shell ("echo sin:" @ sin (31.4) @ "cos: " @ cos (3.14));
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+<P>In the above example, we make system from singleton
+object <CODE>sys</CODE> accessible through identifier <CODE>shell</CODE> and
+all public declaration from singleton object <CODE>math</CODE> including
+<CODE>sin</CODE> and <CODE>cos</CODE> accessible by their identifiers.</P>
+
+<HR>
+<A HREF="dino-5.html">Next</A>
+<A HREF="dino-3.html">Previous</A>
+<A HREF="dino.html#toc4">Contents</A>
+</BODY>
+</HTML>

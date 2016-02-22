@@ -1,0 +1,63 @@
+---
+layout: default
+title: The programming language DINO
+---
+
+<p>
+<em>Dino</em> is a high-level, dynamically typed, scripting language
+that has been designed for simplicity, uniformity, and
+expressiveness. Dino is similar to such well known scripting languages
+as Python, Perl, and Lua. As most programmers know the C language,
+Dino resembles C where possible.
+</p>
+
+<p>
+Dino is an extensible, object oriented language that has garbage
+collection. It supports parallelism description, exception handling,
+pattern matching, and dynamic loading of libraries written on other
+languages. Dino works on Linux, Mac OS X, and Windows under CYGWIN.
+</p>
+
+<p>
+Here is short code to taste Dino:
+
+<div style="float: left; width: 50%;">
+<p>Eratosthenes sieve:</p>
+<pre>
+    var i, prime, count = 0, SieveSize = 8191, flags = [SieveSize : 1];
+    for (i = 0; i < SieveSize; i++)
+      if (flags[i]) {
+        prime = i + i + 3;
+        flags[i + prime:SieveSize:prime] = 0;
+        count++;
+      }
+    putln (count);
+
+
+
+
+
+</pre>
+</div>
+<div style="float: right; width: 50%;">
+<p>Simple binary tree and its traversal:</p>
+<pre>
+    class tree {}
+    class leaf (i) {use tree;} class node (l, r) {use tree;}
+
+    fun exists_leaf (test, t) {
+      pmatch (t) {
+        case leaf (v): return test (v);
+        case node (l, r):
+          return exists_leaf (test, l) || exists_leaf (test, r);
+      }
+    }
+    fun has_odd_leaf (t) {
+      exists_leaf (fun (n) {type (n) == int && n % 2 == 1;}, t);
+    }
+</pre>
+</div>
+
+<p>
+For more info about Dino see section <a href="/learn/learn.html">Learn</a>.
+

@@ -1,0 +1,141 @@
+---
+title:  Dino Documentation
+layout: default
+---
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<HTML>
+<HEAD>
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
+ <TITLE>The Programming Language DINO: Program</TITLE>
+ <LINK HREF="dino-9.html" REL=next>
+ <LINK HREF="dino-7.html" REL=previous>
+ <LINK HREF="dino.html#toc8" REL=contents>
+</HEAD>
+<BODY>
+<A HREF="dino-9.html">Next</A>
+<A HREF="dino-7.html">Previous</A>
+<A HREF="dino.html#toc8">Contents</A>
+<HR>
+<H2><A NAME="s8">8.</A> <A HREF="dino.html#toc8">Program</A></H2>
+
+<P>A Dino program is simply a sequence of statements.  There is a special
+declaration useful for writing programs consisting of several files or
+for making Dino packages.  This is the include-declaration.  Before
+execution of any statements all include-declarations are replaced by
+files whose base names are given by the strings.  It is made
+recursively, i.e.  the files themselves can contain other
+include-declarations.  There should be no infinite recursion in this.
+If <CODE>+</CODE> is present in the include-declaration, the file is
+inserted in any case.  Without <CODE>+</CODE> the file is inserted only if
+it has been yet not inserted into the block of the declaration.
+<BLOCKQUOTE><CODE>
+<PRE>
+          Program = StmtList
+
+          IncludeDeclaration = include ["+"] STRING ";"
+</PRE>
+</CODE></BLOCKQUOTE>
+
+Examples:</P>
+<P>The following program outputs the first 24 Fibonachi numbers:
+<BLOCKQUOTE><CODE>
+<PRE>
+          // Recursive function to compute Fibonacci numbers
+          fun fibonacci (n)
+            {
+               if (n &lt;= 1) return 1;
+               return (fibonacci(n-1) + fibonacci(n-2));
+            }
+          
+          var i, fibnum;
+          
+          fibnum = 0;
+          for (i = 0; i &lt;= 24; i++) 
+            {
+              fibnum = fibonacci(i);
+              putln (i @ " " @ fibnum); 
+            }
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+<P>The following program outputs the number of prime numbers less
+than 8190:
+<BLOCKQUOTE><CODE>
+<PRE>
+          var i, prime, k, count, flags;
+          var final SieveSize = 8190;
+
+          flags = [SieveSize + 1 : 0];
+          count = 0;
+          for (i = 0; i &lt;= SieveSize; i++)
+            flags[i] = 1;
+          for (i = 0; i &lt;= SieveSize; i++)
+            if (flags[i])
+              {
+                prime = i + i + 3;
+                k = i + prime;
+                for (;1;;)
+                  {
+                      if (k > SieveSize)
+                      break;
+                    flags[k] = 0;
+                    k += prime;
+                  }
+                count++;
+              }
+          println (count);
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+<P>The following program outputs the number of occurrences of
+different numbers and identifiers in stdin:
+<BLOCKQUOTE><CODE>
+<PRE>
+          var i, key, voc = {};
+          for (;;)
+            try {
+              var ln, a;
+
+              ln = getln ();
+              if (ln == "")
+                continue;
+              a = split (ln, "[^[:alnum:]]");
+              for (i = 0; i &lt; #a; i++)
+                voc {a[i]} = (a[i] in voc ? voc {a[i]} + 1 : 1);
+            } catch (eof) {
+              break;
+            }
+          fun comp (el1, el2) {
+            return cmpv (tolower (el1), tolower (el2));
+          }
+          key = sort (keys (voc), comp);
+          for (i = 0; i &lt; #key; i++)
+            putln (key[i], " : ", voc{key[i]});
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+<P>The following program uses the Dino package <CODE>socket</CODE>:
+<BLOCKQUOTE><CODE>
+<PRE>
+          include "socket";
+          var s, cl, str, l = 0;
+          s = sockets.stream_server (10003, 4);
+          cl = s.accept ();
+          try {
+            for (;;) {
+               str = cl.read (64); l += #str; cl.write (str);
+            }
+          } catch (sockets.socket_eof_except) {
+            putln ("i got ", l, " bytes");
+          }
+</PRE>
+</CODE></BLOCKQUOTE>
+</P>
+
+<HR>
+<A HREF="dino-9.html">Next</A>
+<A HREF="dino-7.html">Previous</A>
+<A HREF="dino.html#toc8">Contents</A>
+</BODY>
+</HTML>

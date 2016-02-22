@@ -1,0 +1,54 @@
+#!/bin/bash
+
+if test -f _config.yml;then
+        echo +++ Starting
+else
+	echo +++ You may call build only in dino-lang.github.io directory
+	exit 1
+fi
+
+rm -rf _build
+mkdir _build && cd _build
+
+echo +++ Cloning...
+
+git clone https://github.com/dino-lang/dino.git
+git clone https://github.com/dino-lang/introduction.git
+git clone https://github.com/dino-lang/implementation-article.git
+
+annotate() {
+  echo '---' > "$2"
+  echo 'title: ' "$1" >> "$2"
+  echo 'layout: default' >> "$2"
+  echo '---' >> "$2"
+  echo >> "$2"
+}
+
+echo +++ Building learn directory ...
+annotate "Learn Dino" ../learn/overview.md
+fgrep -v "vmakarov@gcc.gnu.org" dino/README.md >> ../learn/overview.md
+cp dino/Dino.jpg dino/Dino_Flow.png ../learn
+
+annotate "Dino Introduction" ../learn/intro.html
+cat introduction/intro.html >> ../learn/intro.html
+cp introduction/*.d ../learn
+cp introduction/*.sas ../learn
+
+cp implementation-article/dino.pdf ../learn
+
+echo +++ Building doc directory ...
+
+for i in dino/DINO/*.html;do
+  annotate "Dino Documentation" ../doc/`basename $i`
+  cat $i >> ../doc/`basename $i`
+done
+
+echo +++ Building download directory ...
+(cd dino && ./configure --enable-debug && make -j4 && make dist && cp dino*.tar.gz ../../download) || exit 1
+
+cd .. && rm -rf _build
+
+echo +++ Everything is ok: you can commit
+
+exit 0
+
