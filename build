@@ -12,7 +12,7 @@ mkdir _build && cd _build
 
 echo +++ Cloning...
 
-git clone https://github.com/dino-lang/dino.git
+git clone -b dino-0.97 https://github.com/dino-lang/dino.git
 git clone https://github.com/dino-lang/introduction.git
 git clone https://github.com/dino-lang/implementation-article.git
 
